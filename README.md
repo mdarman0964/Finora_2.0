@@ -22,7 +22,7 @@ Finora keeps everyday money and shared-household accounting in one native app. I
 - Kotlin, Jetpack Compose, Material 3, Navigation Compose
 - Room, Coroutines and Flow
 - Hilt dependency injection
-- Minimum Android API 24; target API 37
+- Minimum Android API 24; target API 36
 - Manrope Latin and Noto Sans Bengali fonts; their SIL Open Font Licenses are in `app/src/main/assets/licenses/`
 
 ## Build and test

@@ -26,8 +26,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +58,7 @@ fun FinoraApp(viewModel: FinoraViewModel = hiltViewModel()) {
     val books by viewModel.books.collectAsState()
     val members by viewModel.members.collectAsState()
     var showEntryEditor by remember { mutableStateOf(false) }
+    var selectedBookId by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -78,7 +81,7 @@ fun FinoraApp(viewModel: FinoraViewModel = hiltViewModel()) {
             startDestination = "home",
             modifier = Modifier.padding(contentPadding)
         ) {
-            composable("home") { HomeScreen(viewModel) }
+            composable("home") { HomeScreen(viewModel, selectedBookId, onBookSelected = { selectedBookId = it }) }
             composable("mess") { MessScreen(viewModel) }
             composable("reports") { ReportsScreen(viewModel) }
             composable("settings") { SettingsScreen(viewModel) }
@@ -88,7 +91,7 @@ fun FinoraApp(viewModel: FinoraViewModel = hiltViewModel()) {
     if (showEntryEditor) {
         EntryEditorSheet(
             viewModel = viewModel,
-            bookId = books.firstOrNull()?.id ?: 0,
+            bookId = selectedBookId.takeIf { id -> books.any { it.id == id } } ?: books.firstOrNull()?.id ?: 0,
             members = members.filter { it.isActive },
             initialEntry = null,
             onDismiss = { showEntryEditor = false }
