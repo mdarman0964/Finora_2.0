@@ -74,18 +74,17 @@ import java.util.Calendar
 private enum class EntryFilter { ALL, IN, OUT }
 
 @Composable
-fun HomeScreen(viewModel: FinoraViewModel) {
+fun HomeScreen(viewModel: FinoraViewModel, selectedBookId: Int, onBookSelected: (Int) -> Unit) {
     val books by viewModel.books.collectAsStateWithLifecycle()
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val members by viewModel.members.collectAsStateWithLifecycle()
     val banglaDigits by viewModel.banglaNumerals.collectAsStateWithLifecycle()
-    var selectedBookId by rememberSaveable { mutableStateOf(0) }
     var showAddBook by remember { mutableStateOf(false) }
     var showEntryEditor by remember { mutableStateOf(false) }
     var editedEntry by remember { mutableStateOf<CashEntryEntity?>(null) }
 
     LaunchedEffect(books) {
-        if (books.isNotEmpty() && books.none { it.id == selectedBookId }) selectedBookId = books.first().id
+        if (books.isNotEmpty() && books.none { it.id == selectedBookId }) onBookSelected(books.first().id)
     }
     val book = books.firstOrNull { it.id == selectedBookId }
     val bookEntries = entries.filter { it.bookId == selectedBookId }
@@ -131,7 +130,7 @@ fun HomeScreen(viewModel: FinoraViewModel) {
                     books.forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option.name) },
-                            onClick = { selectedBookId = option.id; booksMenu = false }
+                            onClick = { onBookSelected(option.id); booksMenu = false }
                         )
                     }
                 }
