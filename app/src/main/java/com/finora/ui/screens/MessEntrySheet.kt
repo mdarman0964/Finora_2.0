@@ -124,12 +124,13 @@ fun MessEntrySheet(
                         MealField(stringResource(R.string.dinner), dinner, { dinner = it }, Modifier.weight(1f))
                         MealField(stringResource(R.string.guest_meals), guest, { guest = it }, Modifier.weight(1f))
                     }
-                } else {
+                    val currSymbol = if (java.util.Locale.getDefault().language == "bn") "৳" else "$"
                     OutlinedTextField(
                         value = amount,
                         onValueChange = { amount = it },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text(stringResource(R.string.amount_bdt)) },
+                        leadingIcon = { Text(currSymbol, modifier = Modifier.padding(start = 12.dp), color = MaterialTheme.colorScheme.primary) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true
                     )

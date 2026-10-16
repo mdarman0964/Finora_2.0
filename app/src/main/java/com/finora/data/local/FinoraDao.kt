@@ -62,4 +62,13 @@ interface FinoraDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun savePersonalExpense(entry: PersonalExpenseEntity)
+
+    @Query("SELECT * FROM notebook_entries ORDER BY date DESC, id DESC")
+    fun observeNotes(): Flow<List<NoteEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveNote(note: NoteEntity): Long
+
+    @Query("DELETE FROM notebook_entries WHERE id = :id")
+    suspend fun deleteNote(id: Int)
 }

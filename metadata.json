@@ -1,0 +1,6 @@
+{
+  "name": "Finora",
+  "description": "A private cash book and shared mess ledger for personal finance and shared bachelor mess expenses.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

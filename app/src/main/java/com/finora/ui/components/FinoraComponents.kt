@@ -84,8 +84,10 @@ fun BalanceCard(
                 )
             }
         }
+        val isBangla = banglaDigits || Locale.getDefault().language == "bn"
+        val symbol = if (isBangla) "৳" else "$"
         Text(
-            if (hidden) "৳ ••••••" else formatAmount(amount, banglaDigits),
+            if (hidden) "$symbol ••••••" else formatAmount(amount, banglaDigits),
             color = Color.White,
             style = MaterialTheme.typography.displayLarge.copy(fontSize = 34.sp, fontWeight = FontWeight.Bold),
             maxLines = 1
@@ -125,16 +127,33 @@ fun categoryDisplayName(category: String): String = when (category) {
     "Salary" -> stringResource(R.string.category_salary)
     "Gift" -> stringResource(R.string.category_gift)
     "Health" -> stringResource(R.string.category_health)
-    else -> stringResource(R.string.category_other)
+    "Sales" -> stringResource(R.string.category_sales)
+    "Purchase" -> stringResource(R.string.category_purchase)
+    "Rent" -> stringResource(R.string.category_rent)
+    "BizSalary" -> stringResource(R.string.category_salary_biz)
+    "Utilities" -> stringResource(R.string.category_utilities)
+    "Marketing" -> stringResource(R.string.category_marketing)
+    "Tax" -> stringResource(R.string.category_tax)
+    "Delivery" -> stringResource(R.string.category_delivery)
+    "General" -> stringResource(R.string.category_general)
+    "Dues" -> stringResource(R.string.category_dues)
+    "Budget" -> stringResource(R.string.category_budget)
+    "Memo" -> stringResource(R.string.category_memo)
+    "Other" -> stringResource(R.string.category_other)
+    else -> category
 }
 
-fun formatAmount(amountInPaisa: Long, banglaDigits: Boolean): String {
-    val locale = if (banglaDigits) Locale.forLanguageTag("bn-BD") else Locale.US
+fun getCurrencySymbol(): String = if (Locale.getDefault().language == "bn") "৳" else "$"
+
+fun formatAmount(amountInPaisa: Long, banglaDigits: Boolean = (Locale.getDefault().language == "bn")): String {
+    val useBangla = banglaDigits || Locale.getDefault().language == "bn"
+    val locale = if (useBangla) Locale.forLanguageTag("bn-BD") else Locale.US
+    val symbol = if (useBangla) "৳" else "$"
     val number = NumberFormat.getNumberInstance(locale).apply {
         minimumFractionDigits = 2
         maximumFractionDigits = 2
     }
-    return "৳${number.format(amountInPaisa / 100.0)}"
+    return "$symbol${number.format(amountInPaisa / 100.0)}"
 }
 
 @Composable

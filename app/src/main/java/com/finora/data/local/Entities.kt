@@ -20,7 +20,18 @@ data class CashEntryEntity(
     val category: String,
     val note: String = "",
     val date: Long = System.currentTimeMillis(),
-    val memberId: Int? = null
+    val memberId: Int? = null,
+    val section: String = "Personal"
+)
+
+@Entity(tableName = "notebook_entries")
+data class NoteEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val title: String,
+    val content: String,
+    val category: String = "General",
+    val amount: Long? = null,
+    val date: Long = System.currentTimeMillis()
 )
 
 @Entity(tableName = "mess_members")

@@ -23,8 +23,25 @@ fun monthBounds(timestamp: Long): LongRange {
     return start..calendar.timeInMillis
 }
 
-fun monthLabel(timestamp: Long, locale: Locale = Locale.getDefault()): String =
-    SimpleDateFormat("MMMM yyyy", locale).format(Date(timestamp))
+fun toBanglaDigits(text: String): String {
+    val bnDigits = charArrayOf('০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯')
+    val sb = StringBuilder()
+    for (ch in text) {
+        if (ch in '0'..'9') {
+            sb.append(bnDigits[ch - '0'])
+        } else {
+            sb.append(ch)
+        }
+    }
+    return sb.toString()
+}
 
-fun dateLabel(timestamp: Long, locale: Locale = Locale.getDefault()): String =
-    SimpleDateFormat("EEE, d MMM", locale).format(Date(timestamp))
+fun monthLabel(timestamp: Long, locale: Locale = Locale.getDefault()): String {
+    val formatted = SimpleDateFormat("MMMM yyyy", locale).format(Date(timestamp))
+    return if (locale.language == "bn") toBanglaDigits(formatted) else formatted
+}
+
+fun dateLabel(timestamp: Long, locale: Locale = Locale.getDefault()): String {
+    val formatted = SimpleDateFormat("EEE, d MMM", locale).format(Date(timestamp))
+    return if (locale.language == "bn") toBanglaDigits(formatted) else formatted
+}

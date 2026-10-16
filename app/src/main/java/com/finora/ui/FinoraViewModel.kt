@@ -10,6 +10,7 @@ import com.finora.data.local.DepositEntity
 import com.finora.data.local.MealEntity
 import com.finora.data.local.MemberEntity
 import com.finora.data.local.PersonalExpenseEntity
+import com.finora.data.local.NoteEntity
 import com.finora.data.prefs.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -30,6 +31,7 @@ class FinoraViewModel @Inject constructor(
     val meals = repository.meals.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val bazar = repository.bazar.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val personalExpenses = repository.personalExpenses.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val notes = repository.notes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val themeChoice: StateFlow<String> = settings.themeChoice
     val language: StateFlow<String> = settings.language
@@ -81,6 +83,9 @@ class FinoraViewModel @Inject constructor(
                 PersonalExpenseEntity(memberId = memberId, amount = amount, category = category, note = note, date = date)
             )
         }
+
+    fun saveNote(note: NoteEntity) = viewModelScope.launch { repository.saveNote(note) }
+    fun deleteNote(id: Int) = viewModelScope.launch { repository.deleteNote(id) }
 
     fun setThemeChoice(value: String) = settings.setThemeChoice(value)
     fun setLanguage(value: String) = settings.setLanguage(value)

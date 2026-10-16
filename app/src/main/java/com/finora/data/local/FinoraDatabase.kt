@@ -11,9 +11,10 @@ import androidx.room.RoomDatabase
         DepositEntity::class,
         MealEntity::class,
         BazarEntity::class,
-        PersonalExpenseEntity::class
+        PersonalExpenseEntity::class,
+        NoteEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class FinoraDatabase : RoomDatabase() {

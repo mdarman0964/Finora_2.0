@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -74,7 +75,12 @@ import java.util.Calendar
 private enum class EntryFilter { ALL, IN, OUT }
 
 @Composable
-fun HomeScreen(viewModel: FinoraViewModel, selectedBookId: Int, onBookSelected: (Int) -> Unit) {
+fun HomeScreen(
+    viewModel: FinoraViewModel,
+    selectedBookId: Int,
+    onBookSelected: (Int) -> Unit,
+    onOpenDrawer: () -> Unit = {}
+) {
     val books by viewModel.books.collectAsStateWithLifecycle()
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val members by viewModel.members.collectAsStateWithLifecycle()
@@ -87,7 +93,7 @@ fun HomeScreen(viewModel: FinoraViewModel, selectedBookId: Int, onBookSelected: 
         if (books.isNotEmpty() && books.none { it.id == selectedBookId }) onBookSelected(books.first().id)
     }
     val book = books.firstOrNull { it.id == selectedBookId }
-    val bookEntries = entries.filter { it.bookId == selectedBookId }
+    val bookEntries = entries.filter { (it.section == "Personal" || it.section.isBlank()) && (it.bookId == selectedBookId || selectedBookId == 0) }
     val balance = (book?.openingBalance ?: 0L) + bookEntries.sumOf { if (it.type == "IN") it.amount else -it.amount }
     val now = System.currentTimeMillis()
     val range = monthBounds(now)
@@ -106,13 +112,24 @@ fun HomeScreen(viewModel: FinoraViewModel, selectedBookId: Int, onBookSelected: 
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.home_eyebrow), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineMedium)
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                IconButton(
+                    onClick = onOpenDrawer,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(Icons.Outlined.Menu, contentDescription = stringResource(R.string.open_menu))
                 }
-                Card(shape = CircleShape, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                    Text("F", modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        stringResource(R.string.section_personal),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineSmall)
                 }
             }
         }
@@ -230,6 +247,7 @@ fun HomeScreen(viewModel: FinoraViewModel, selectedBookId: Int, onBookSelected: 
             bookId = editedEntry?.bookId ?: book.id,
             members = members.filter { it.isActive },
             initialEntry = editedEntry,
+            defaultSection = "Personal",
             onDismiss = { showEntryEditor = false; editedEntry = null }
         )
     }

@@ -48,6 +48,8 @@ import com.finora.domain.time.dateLabel
 import java.math.BigDecimal
 import java.math.RoundingMode
 
+import com.finora.ui.components.categoryDisplayName
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EntryEditorSheet(
@@ -55,13 +57,19 @@ fun EntryEditorSheet(
     bookId: Int,
     members: List<MemberEntity>,
     initialEntry: CashEntryEntity?,
+    defaultSection: String = "Personal",
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
     val view = LocalView.current
+    var section by rememberSaveable(initialEntry?.id) { mutableStateOf(initialEntry?.section ?: defaultSection) }
     var type by rememberSaveable(initialEntry?.id) { mutableStateOf(initialEntry?.type ?: "OUT") }
     var amount by rememberSaveable(initialEntry?.id) { mutableStateOf(initialEntry?.amount?.let { BigDecimal(it).divide(BigDecimal(100)).stripTrailingZeros().toPlainString() } ?: "") }
-    var category by rememberSaveable(initialEntry?.id) { mutableStateOf(initialEntry?.category ?: "Food") }
+    var category by rememberSaveable(initialEntry?.id, section) {
+        mutableStateOf(
+            initialEntry?.category ?: if (section == "Business") "Sales" else "Food"
+        )
+    }
     var note by rememberSaveable(initialEntry?.id) { mutableStateOf(initialEntry?.note ?: "") }
     var selectedMember by rememberSaveable(initialEntry?.id) { mutableStateOf(initialEntry?.memberId ?: 0) }
     var date by rememberSaveable(initialEntry?.id) { mutableStateOf(initialEntry?.date ?: System.currentTimeMillis()) }
@@ -69,7 +77,11 @@ fun EntryEditorSheet(
     var memberMenu by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
-    val categories = listOf("Food", "Transport", "Shopping", "Bills", "Salary", "Gift", "Health", "Other")
+
+    val personalCategories = listOf("Food", "Transport", "Shopping", "Bills", "Salary", "Gift", "Health", "Other")
+    val businessCategories = listOf("Sales", "Purchase", "Rent", "BizSalary", "Utilities", "Marketing", "Tax", "Delivery", "Other")
+    val categories = if (section == "Business") businessCategories else personalCategories
+
     val parsedAmount = amount.trim().replace(",", "").toBigDecimalOrNull()
         ?.multiply(BigDecimal(100))?.setScale(0, RoundingMode.HALF_UP)?.toLong()
 
@@ -83,27 +95,48 @@ fun EntryEditorSheet(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text(stringResource(if (initialEntry == null) R.string.add_entry else R.string.edit_entry), style = MaterialTheme.typography.headlineMedium)
+
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                FilterChip(
+                    selected = section == "Personal",
+                    onClick = {
+                        section = "Personal"
+                        if (!personalCategories.contains(category)) category = "Food"
+                    },
+                    label = { Text(stringResource(R.string.section_personal)) }
+                )
+                FilterChip(
+                    selected = section == "Business",
+                    onClick = {
+                        section = "Business"
+                        if (!businessCategories.contains(category)) category = "Sales"
+                    },
+                    label = { Text(stringResource(R.string.section_business)) }
+                )
+            }
+
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FilterChip(selected = type == "IN", onClick = { type = "IN" }, label = { Text(stringResource(R.string.cash_in)) })
                 FilterChip(selected = type == "OUT", onClick = { type = "OUT" }, label = { Text(stringResource(R.string.cash_out)) })
             }
+            val currSymbol = if (java.util.Locale.getDefault().language == "bn") "৳" else "$"
             OutlinedTextField(
                 value = amount,
                 onValueChange = { amount = it },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.amount_bdt)) },
-                leadingIcon = { Text("৳", modifier = Modifier.padding(start = 12.dp), color = MaterialTheme.colorScheme.primary) },
+                leadingIcon = { Text(currSymbol, modifier = Modifier.padding(start = 12.dp), color = MaterialTheme.colorScheme.primary) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true
             )
             Column {
                 Text(stringResource(R.string.category), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(bottom = 6.dp))
                 OutlinedButton(onClick = { categoryMenu = true }, modifier = Modifier.fillMaxWidth().height(50.dp)) {
-                    Text(categoryTitle(category))
+                    Text(categoryDisplayName(category))
                 }
                 DropdownMenu(expanded = categoryMenu, onDismissRequest = { categoryMenu = false }) {
                     categories.forEach { value ->
-                        DropdownMenuItem(text = { Text(categoryTitle(value)) }, onClick = { category = value; categoryMenu = false })
+                        DropdownMenuItem(text = { Text(categoryDisplayName(value)) }, onClick = { category = value; categoryMenu = false })
                     }
                 }
             }
@@ -145,7 +178,8 @@ fun EntryEditorSheet(
                             category = category,
                             note = note.trim(),
                             date = date,
-                            memberId = selectedMember.takeIf { it > 0 }
+                            memberId = selectedMember.takeIf { it > 0 },
+                            section = section
                         )
                     )
                     onDismiss()
@@ -189,16 +223,4 @@ fun EntryEditorSheet(
             dismissButton = { TextButton(onClick = { showDeleteConfirmation = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
-}
-
-@Composable
-private fun categoryTitle(category: String): String = when (category) {
-    "Food" -> stringResource(R.string.category_food)
-    "Transport" -> stringResource(R.string.category_transport)
-    "Shopping" -> stringResource(R.string.category_shopping)
-    "Bills" -> stringResource(R.string.category_bills)
-    "Salary" -> stringResource(R.string.category_salary)
-    "Gift" -> stringResource(R.string.category_gift)
-    "Health" -> stringResource(R.string.category_health)
-    else -> stringResource(R.string.category_other)
 }

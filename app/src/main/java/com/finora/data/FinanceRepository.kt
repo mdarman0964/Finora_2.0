@@ -8,6 +8,7 @@ import com.finora.data.local.FinoraDao
 import com.finora.data.local.MealEntity
 import com.finora.data.local.MemberEntity
 import com.finora.data.local.PersonalExpenseEntity
+import com.finora.data.local.NoteEntity
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
@@ -19,9 +20,13 @@ class FinanceRepository @Inject constructor(private val dao: FinoraDao) {
     val meals: Flow<List<MealEntity>> = dao.observeMeals()
     val bazar: Flow<List<BazarEntity>> = dao.observeBazar()
     val personalExpenses: Flow<List<PersonalExpenseEntity>> = dao.observePersonalExpenses()
+    val notes: Flow<List<NoteEntity>> = dao.observeNotes()
 
     suspend fun ensureDefaultBook() {
-        if (dao.bookCount() == 0) dao.saveBook(BookEntity(name = "Personal"))
+        if (dao.bookCount() == 0) {
+            dao.saveBook(BookEntity(name = "Personal"))
+            dao.saveBook(BookEntity(name = "Business"))
+        }
     }
 
     suspend fun saveBook(name: String) = dao.saveBook(BookEntity(name = name.trim()))
@@ -33,5 +38,7 @@ class FinanceRepository @Inject constructor(private val dao: FinoraDao) {
     suspend fun saveMeal(entry: MealEntity) = dao.saveMeal(entry)
     suspend fun saveBazar(entry: BazarEntity) = dao.saveBazar(entry)
     suspend fun savePersonalExpense(entry: PersonalExpenseEntity) = dao.savePersonalExpense(entry)
+    suspend fun saveNote(note: NoteEntity) = dao.saveNote(note)
+    suspend fun deleteNote(id: Int) = dao.deleteNote(id)
     suspend fun getBook(id: Int) = dao.getBook(id)
 }

@@ -14,10 +14,11 @@ class UserSettings @Inject constructor(@ApplicationContext context: Context) {
     private val _themeChoice = MutableStateFlow(preferences.getString(KEY_THEME, "system") ?: "system")
     val themeChoice: StateFlow<String> = _themeChoice
 
-    private val _language = MutableStateFlow(preferences.getString(KEY_LANGUAGE, "en") ?: "en")
+    private val savedLang = preferences.getString(KEY_LANGUAGE, "en") ?: "en"
+    private val _language = MutableStateFlow(savedLang)
     val language: StateFlow<String> = _language
 
-    private val _banglaNumerals = MutableStateFlow(preferences.getBoolean(KEY_BANGLA_NUMERALS, false))
+    private val _banglaNumerals = MutableStateFlow(savedLang == "bn")
     val banglaNumerals: StateFlow<Boolean> = _banglaNumerals
 
     fun setThemeChoice(value: String) {
@@ -26,8 +27,13 @@ class UserSettings @Inject constructor(@ApplicationContext context: Context) {
     }
 
     fun setLanguage(value: String) {
-        preferences.edit().putString(KEY_LANGUAGE, value).apply()
+        val isBn = (value == "bn")
+        preferences.edit()
+            .putString(KEY_LANGUAGE, value)
+            .putBoolean(KEY_BANGLA_NUMERALS, isBn)
+            .apply()
         _language.value = value
+        _banglaNumerals.value = isBn
     }
 
     fun setBanglaNumerals(value: Boolean) {

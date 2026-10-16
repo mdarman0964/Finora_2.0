@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
 import androidx.compose.material.icons.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material3.AlertDialog
@@ -66,7 +67,10 @@ import java.util.Calendar
 enum class MessForm { MEMBER, DEPOSIT, MEAL, BAZAR, PERSONAL }
 
 @Composable
-fun MessScreen(viewModel: FinoraViewModel) {
+fun MessScreen(
+    viewModel: FinoraViewModel,
+    onOpenDrawer: () -> Unit = {}
+) {
     val members by viewModel.members.collectAsStateWithLifecycle()
     val deposits by viewModel.deposits.collectAsStateWithLifecycle()
     val meals by viewModel.meals.collectAsStateWithLifecycle()
@@ -114,8 +118,23 @@ fun MessScreen(viewModel: FinoraViewModel) {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Text(stringResource(R.string.mess_title), style = MaterialTheme.typography.headlineMedium)
-            Text(stringResource(R.string.mess_subtitle), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                IconButton(onClick = onOpenDrawer, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.Outlined.Menu, contentDescription = stringResource(R.string.open_menu))
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        stringResource(R.string.section_bachelor),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(stringResource(R.string.mess_title), style = MaterialTheme.typography.headlineSmall)
+                }
+            }
         }
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -147,7 +166,7 @@ fun MessScreen(viewModel: FinoraViewModel) {
                     FinoraCard {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(stringResource(R.string.month_meals), style = MaterialTheme.typography.titleMedium)
-                            Text("${totalMeals.toCleanNumber()}", style = MaterialTheme.typography.headlineMedium)
+                            Text(totalMeals.toCleanNumber(banglaDigits), style = MaterialTheme.typography.headlineMedium)
                             Text(
                                 stringResource(R.string.calculation_formula),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -190,7 +209,8 @@ fun MessScreen(viewModel: FinoraViewModel) {
             1 -> {
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.active_members, members.count { it.isActive }), style = MaterialTheme.typography.titleLarge)
+                        val activeCount = if (banglaDigits) com.finora.domain.time.toBanglaDigits("${members.count { it.isActive }}") else "${members.count { it.isActive }}"
+                        Text(stringResource(R.string.active_members, activeCount), style = MaterialTheme.typography.titleLarge)
                         IconButton(onClick = { editedMember = null; form = MessForm.MEMBER }) {
                             Icon(Icons.Outlined.PersonAdd, contentDescription = stringResource(R.string.add_member))
                         }
@@ -291,7 +311,7 @@ private fun SettlementRow(settlement: MemberSettlement, banglaDigits: Boolean) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(settlement.memberName, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    stringResource(R.string.meals_and_share, settlement.meals.toCleanNumber(), formatAmount(settlement.mealCost, banglaDigits)),
+                    stringResource(R.string.meals_and_share, settlement.meals.toCleanNumber(banglaDigits), formatAmount(settlement.mealCost, banglaDigits)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -362,4 +382,7 @@ private fun activityTitle(kind: String): String = when (kind) {
     else -> stringResource(R.string.meals)
 }
 
-private fun Double.toCleanNumber(): String = if (this % 1.0 == 0.0) toInt().toString() else String.format("%.1f", this)
+private fun Double.toCleanNumber(banglaDigits: Boolean = false): String {
+    val formatted = if (this % 1.0 == 0.0) toInt().toString() else String.format(java.util.Locale.US, "%.1f", this)
+    return if (banglaDigits) com.finora.domain.time.toBanglaDigits(formatted) else formatted
+}
