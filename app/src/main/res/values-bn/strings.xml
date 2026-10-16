@@ -179,4 +179,30 @@
     <string name="mit_license_view_full">সম্পূর্ণ লাইসেন্স দেখুন</string>
     <string name="mit_license_full_text">MIT License\n\nCopyright (c) 2026 Finora contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</string>
     <string name="close">বন্ধ করুন</string>
+    <string name="mess_calculation">হিসাব ও দেনা-পাওনা</string>
+    <string name="total_deposit">মোট জমা</string>
+    <string name="mess_cash_fund">মেস ক্যাশ ফান্ড</string>
+    <string name="mess_cash_surplus">মেস ফান্ডে ক্যাশ উদ্বৃত্ত</string>
+    <string name="mess_cash_deficit">মেস ফান্ড ঘাটতি (জমা প্রয়োজন)</string>
+    <string name="member_deposit_paid">জমা দেওয়া টাকা</string>
+    <string name="member_bazar_spent">বাজার খরচ</string>
+    <string name="member_total_contribution">মোট প্রদান (জমা + বাজার)</string>
+    <string name="member_meal_cost">মিল খরচ</string>
+    <string name="due_status_gets_back">পাওনা (ফেরত পাবে)</string>
+    <string name="due_status_owes">দেনা (মেসে দিতে হবে)</string>
+    <string name="due_status_settled">পরিশোধিত (ব্যালেন্স ০)</string>
+    <string name="settlement_formula_note">হিসাবের নিয়ম: (জমা + বাজার) − মিল খরচ = পাওনা / দেনা</string>
+    <string name="quick_calculator">হিসাব ক্যালকুলেটর</string>
+    <string name="calculator_dialog_title">মেস দেনা-পাওনা ও হিসাব ক্যালকুলেটর</string>
+    <string name="calculator_dialog_subtitle">বাজার খরচ, জমা ও মিল দিয়ে সহজেই দেনা-পাওনা হিসাব করুন।</string>
+    <string name="select_member_or_custom">মেম্বার বেছে নিন</string>
+    <string name="custom_calculation">কাস্টম / নতুন হিসাব</string>
+    <string name="calc_result_gets_back">%1$s মেস থেকে %2$s ফেরত পাবে (পাওনা)</string>
+    <string name="calc_result_owes">%1$s-কে মেসে %2$s দিতে হবে (দেনা)</string>
+    <string name="share_mess_summary">হিসাব কপি ও শেয়ার</string>
+    <string name="mess_summary_copied">মেসের হিসাব ক্লিপবোর্ডে কপি হয়েছে!</string>
+    <string name="all_members_calculation">মেম্বারদের জমা, বাজার ও দেনা-পাওনার হিসাব</string>
+    <string name="quick_deposit">+ জমা</string>
+    <string name="quick_bazar">+ বাজার</string>
+    <string name="mess_ledger_empty">এখনো কোনো মেম্বারের হিসাব নেই। সদস্য যোগ করে হিসাব শুরু করুন।</string>
 </resources>

@@ -1,5 +1,8 @@
 package com.finora.ui.screens
 
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,14 +16,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
 import androidx.compose.material.icons.outlined.ArrowForwardIos
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -30,10 +39,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -77,12 +91,17 @@ fun MessScreen(
     val bazar by viewModel.bazar.collectAsStateWithLifecycle()
     val personal by viewModel.personalExpenses.collectAsStateWithLifecycle()
     val banglaDigits by viewModel.banglaNumerals.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
     var tab by rememberSaveable { mutableStateOf(0) }
     var monthOffset by rememberSaveable { mutableStateOf(0) }
     var actionMenu by remember { mutableStateOf(false) }
     var form by remember { mutableStateOf<MessForm?>(null) }
     var editedMember by remember { mutableStateOf<MemberEntity?>(null) }
     var deactivateTarget by remember { mutableStateOf<MemberEntity?>(null) }
+    var showCalculator by rememberSaveable { mutableStateOf(false) }
+    var quickMemberId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var quickCalculatorMemberId by rememberSaveable { mutableStateOf<Int?>(null) }
 
     val monthTime = (Calendar.getInstance().apply { add(Calendar.MONTH, monthOffset) }).timeInMillis
     val bounds = monthBounds(monthTime)
@@ -91,6 +110,8 @@ fun MessScreen(
     val monthBazar = bazar.filter { it.date in bounds }
     val monthPersonal = personal.filter { it.date in bounds }
     val totalBazar = monthBazar.sumOf { it.amount }
+    val totalDeposits = monthDeposits.sumOf { it.amount }
+    val cashInHand = totalDeposits - totalBazar
     val totalMeals = monthMeals.sumOf { it.totalMeals }
     val rate = MessCalculator.mealRate(totalBazar, totalMeals)
     val includedMembers = members.filter { member ->
@@ -148,14 +169,139 @@ fun MessScreen(
             }
         }
         item {
-            TabRow(selectedTabIndex = tab, containerColor = MaterialTheme.colorScheme.background) {
-                listOf(R.string.summary, R.string.members, R.string.activity).forEachIndexed { index, label ->
+            ScrollableTabRow(
+                selectedTabIndex = tab,
+                edgePadding = 0.dp,
+                containerColor = MaterialTheme.colorScheme.background
+            ) {
+                listOf(R.string.mess_calculation, R.string.summary, R.string.members, R.string.activity).forEachIndexed { index, label ->
                     Tab(selected = tab == index, onClick = { tab = index }, text = { Text(stringResource(label)) })
                 }
             }
         }
         when (tab) {
             0 -> {
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            StatChip(stringResource(R.string.bazar_total), formatAmount(totalBazar, banglaDigits), CashOut, Modifier.weight(1f))
+                            StatChip(stringResource(R.string.total_deposit), formatAmount(totalDeposits, banglaDigits), CashIn, Modifier.weight(1f))
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            val surplus = cashInHand >= 0
+                            val fundTitle = if (surplus) stringResource(R.string.mess_cash_surplus) else stringResource(R.string.mess_cash_deficit)
+                            StatChip(
+                                label = fundTitle,
+                                value = formatAmount(kotlin.math.abs(cashInHand), banglaDigits),
+                                tint = if (surplus) CashIn else CashOut,
+                                modifier = Modifier.weight(1f)
+                            )
+                            StatChip(
+                                label = stringResource(R.string.meal_rate),
+                                value = formatAmount((rate * 100).toLong(), banglaDigits),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+                item {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { quickCalculatorMemberId = null; showCalculator = true },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Outlined.Calculate, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text(stringResource(R.string.quick_calculator), maxLines = 1)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                val summary = MessCalculator.calculateMessSummary(
+                                    includedMembers.map { member ->
+                                        MemberMealInput(
+                                            memberId = member.id,
+                                            memberName = member.name,
+                                            deposits = monthDeposits.filter { it.memberId == member.id }.sumOf { it.amount },
+                                            bazarSpending = monthBazar.filter { it.memberId == member.id }.sumOf { it.amount },
+                                            meals = monthMeals.filter { it.memberId == member.id }.sumOf { it.totalMeals }
+                                        )
+                                    },
+                                    totalBazar,
+                                    totalDeposits
+                                )
+                                val report = MessCalculator.generateShareableReport(
+                                    monthLabel(monthTime),
+                                    summary,
+                                    isBn = banglaDigits || Locale.getDefault().language == "bn"
+                                )
+                                clipboardManager.setText(AnnotatedString(report))
+                                Toast.makeText(context, context.getString(R.string.mess_summary_copied), Toast.LENGTH_SHORT).show()
+                                try {
+                                    val sendIntent = Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        putExtra(Intent.EXTRA_TEXT, report)
+                                        type = "text/plain"
+                                    }
+                                    val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.share_mess_summary))
+                                    context.startActivity(shareIntent)
+                                } catch (_: Exception) {}
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text(stringResource(R.string.share_mess_summary), maxLines = 1)
+                        }
+                    }
+                }
+                item {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { quickMemberId = null; form = MessForm.BAZAR },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Outlined.ShoppingCart, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text(stringResource(R.string.add_bazar), maxLines = 1)
+                        }
+                        Button(
+                            onClick = { quickMemberId = null; form = MessForm.DEPOSIT },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text(stringResource(R.string.add_deposit), maxLines = 1)
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        stringResource(R.string.all_members_calculation),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+                if (settlements.isNotEmpty()) {
+                    items(settlements, key = { "ledger-${it.memberId}" }) { s ->
+                        MemberLedgerCard(
+                            settlement = s,
+                            banglaDigits = banglaDigits,
+                            onCalculate = { quickCalculatorMemberId = s.memberId; showCalculator = true },
+                            onAddDeposit = { quickMemberId = s.memberId; form = MessForm.DEPOSIT },
+                            onAddBazar = { quickMemberId = s.memberId; form = MessForm.BAZAR }
+                        )
+                    }
+                } else {
+                    item { EmptyMessState(onAdd = { form = MessForm.MEMBER }) }
+                }
+            }
+            1 -> {
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         StatChip(stringResource(R.string.bazar_total), formatAmount(totalBazar, banglaDigits), CashOut, Modifier.weight(1f))
@@ -206,7 +352,7 @@ fun MessScreen(
                     }
                 }
             }
-            1 -> {
+            2 -> {
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         val activeCount = if (banglaDigits) com.finora.domain.time.toBanglaDigits("${members.count { it.isActive }}") else "${members.count { it.isActive }}"
@@ -279,13 +425,29 @@ fun MessScreen(
         }
     }
 
+    if (showCalculator) {
+        MessCalculatorDialog(
+            members = members.filter { it.isActive },
+            settlements = settlements,
+            totalBazar = totalBazar,
+            totalMeals = totalMeals,
+            banglaDigits = banglaDigits,
+            initialMemberId = quickCalculatorMemberId,
+            onDismiss = {
+                showCalculator = false
+                quickCalculatorMemberId = null
+            }
+        )
+    }
+
     if (form != null) {
         MessEntrySheet(
             viewModel = viewModel,
             kind = form!!,
             members = members.filter { it.isActive },
             editedMember = editedMember,
-            onDismiss = { form = null; editedMember = null }
+            initialMemberId = quickMemberId,
+            onDismiss = { form = null; editedMember = null; quickMemberId = null }
         )
     }
     deactivateTarget?.let { target ->
@@ -300,6 +462,159 @@ fun MessScreen(
             },
             dismissButton = { TextButton(onClick = { deactivateTarget = null }) { Text(stringResource(R.string.cancel)) } }
         )
+    }
+}
+
+@Composable
+private fun MemberLedgerCard(
+    settlement: MemberSettlement,
+    banglaDigits: Boolean,
+    onCalculate: () -> Unit,
+    onAddDeposit: () -> Unit,
+    onAddBazar: () -> Unit
+) {
+    val isBn = banglaDigits || Locale.getDefault().language == "bn"
+    val isRefund = settlement.balance > 0
+    val isDue = settlement.balance < 0
+    val totalPaid = settlement.deposits + settlement.bazarSpending
+    val statusColor = if (isRefund) CashIn else if (isDue) CashOut else MaterialTheme.colorScheme.outline
+    val statusText = if (isRefund) stringResource(R.string.due_status_gets_back)
+        else if (isDue) stringResource(R.string.due_status_owes)
+        else stringResource(R.string.due_status_settled)
+
+    FinoraCard {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Card(
+                        shape = MaterialTheme.shapes.small,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Text(
+                            settlement.memberName.take(1).uppercase(),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(settlement.memberName, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "${settlement.meals.toCleanNumber(banglaDigits)} ${stringResource(R.string.meals)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Card(
+                    shape = MaterialTheme.shapes.small,
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isRefund) CashIn.copy(alpha = 0.12f)
+                        else if (isDue) CashOut.copy(alpha = 0.12f)
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    modifier = Modifier.border(
+                        1.dp,
+                        statusColor.copy(alpha = 0.4f),
+                        MaterialTheme.shapes.small
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            formatAmount(kotlin.math.abs(settlement.balance), banglaDigits),
+                            color = statusColor,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            statusText,
+                            color = statusColor,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Card(
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+            ) {
+                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.member_deposit_paid), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(formatAmount(settlement.deposits, banglaDigits), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = CashIn)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.member_bazar_spent), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(formatAmount(settlement.bazarSpending, banglaDigits), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = CashOut)
+                        }
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.member_total_contribution), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(formatAmount(totalPaid, banglaDigits), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.member_meal_cost), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(formatAmount(settlement.mealCost, banglaDigits), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
+
+            val formulaDesc = if (isBn) {
+                "হিসাব: মোট প্রদান (${formatAmount(totalPaid, banglaDigits)}) − মিল খরচ (${formatAmount(settlement.mealCost, banglaDigits)}) = ${formatAmount(settlement.balance, banglaDigits)}"
+            } else {
+                "Formula: Paid (${formatAmount(totalPaid, banglaDigits)}) − Meal Cost (${formatAmount(settlement.mealCost, banglaDigits)}) = ${formatAmount(settlement.balance, banglaDigits)}"
+            }
+
+            Text(
+                formulaDesc,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onCalculate) {
+                    Icon(Icons.Outlined.Calculate, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.size(4.dp))
+                    Text(if (isBn) "হিসাব" else "Calculate")
+                }
+                TextButton(onClick = onAddDeposit) {
+                    Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.size(4.dp))
+                    Text(stringResource(R.string.quick_deposit))
+                }
+                TextButton(onClick = onAddBazar) {
+                    Icon(Icons.Outlined.ShoppingCart, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.size(4.dp))
+                    Text(stringResource(R.string.quick_bazar))
+                }
+            }
+        }
     }
 }
 

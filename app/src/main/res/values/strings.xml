@@ -179,4 +179,30 @@
     <string name="mit_license_view_full">View Full License</string>
     <string name="mit_license_full_text">MIT License\n\nCopyright (c) 2026 Finora contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</string>
     <string name="close">Close</string>
+    <string name="mess_calculation">Calculation &amp; Dues</string>
+    <string name="total_deposit">Total deposits</string>
+    <string name="mess_cash_fund">Mess cash fund</string>
+    <string name="mess_cash_surplus">Surplus in fund</string>
+    <string name="mess_cash_deficit">Deficit (More deposits needed)</string>
+    <string name="member_deposit_paid">Deposited</string>
+    <string name="member_bazar_spent">Bazar spent</string>
+    <string name="member_total_contribution">Total given</string>
+    <string name="member_meal_cost">Meal cost</string>
+    <string name="due_status_gets_back">Gets back (Refund)</string>
+    <string name="due_status_owes">Owes (Must pay)</string>
+    <string name="due_status_settled">Settled (Balance 0)</string>
+    <string name="settlement_formula_note">Formula: (Deposit + Bazar) − Meal cost = Refund / Due</string>
+    <string name="quick_calculator">Mess Calculator</string>
+    <string name="calculator_dialog_title">Mess Dues &amp; Settlement Calculator</string>
+    <string name="calculator_dialog_subtitle">Easily calculate or simulate member dues, bazar, and deposits.</string>
+    <string name="select_member_or_custom">Select member</string>
+    <string name="custom_calculation">Custom / What-if calculation</string>
+    <string name="calc_result_gets_back">%1$s gets back %2$s from mess (Refund)</string>
+    <string name="calc_result_owes">%1$s owes %2$s to mess (Due)</string>
+    <string name="share_mess_summary">Share / Copy summary</string>
+    <string name="mess_summary_copied">Mess calculation copied to clipboard!</string>
+    <string name="all_members_calculation">Members\' deposit, bazar &amp; dues</string>
+    <string name="quick_deposit">+ Deposit</string>
+    <string name="quick_bazar">+ Bazar</string>
+    <string name="mess_ledger_empty">No member records yet. Add a member to calculate dues.</string>
 </resources>

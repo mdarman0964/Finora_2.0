@@ -49,11 +49,14 @@ fun MessEntrySheet(
     kind: MessForm,
     members: List<MemberEntity>,
     editedMember: MemberEntity?,
+    initialMemberId: Int? = null,
     onDismiss: () -> Unit
 ) {
     val view = LocalView.current
     var name by rememberSaveable(editedMember?.id) { mutableStateOf(editedMember?.name ?: "") }
-    var memberId by rememberSaveable(kind, editedMember?.id) { mutableStateOf(members.firstOrNull()?.id ?: 0) }
+    var memberId by rememberSaveable(kind, editedMember?.id, initialMemberId) {
+        mutableStateOf(initialMemberId ?: members.firstOrNull()?.id ?: 0)
+    }
     var amount by rememberSaveable(kind) { mutableStateOf("") }
     var note by rememberSaveable(kind) { mutableStateOf("") }
     var category by rememberSaveable(kind) { mutableStateOf("Other") }
