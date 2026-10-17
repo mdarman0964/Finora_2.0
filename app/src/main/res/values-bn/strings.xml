@@ -79,7 +79,7 @@
     <string name="mess_empty_body">সদস্য দিয়ে জমা, মিল ও বাজারের খরচ লিখুন।</string>
     <string name="month_activity">এই মাসের কার্যকলাপ</string>
     <string name="add_mess_record">মেসের হিসাব যোগ করুন</string>
-    <string name="add_deposit">জমা লিখুন</string>
+    <string name="add_deposit">জমা রেকর্ড</string>
     <string name="log_meals">মিল লিখুন</string>
     <string name="add_bazar">বাজারের খরচ লিখুন</string>
     <string name="add_personal_expense">ব্যক্তিগত খরচ</string>
@@ -204,5 +204,8 @@
     <string name="all_members_calculation">মেম্বারদের জমা, বাজার ও দেনা-পাওনার হিসাব</string>
     <string name="quick_deposit">+ জমা</string>
     <string name="quick_bazar">+ বাজার</string>
+    <string name="deposit_amount">জমার পরিমাণ</string>
+    <string name="bazar_expense_amount">বাজার খরচের পরিমাণ</string>
+    <string name="bazar_note_hint">বাজারের বিবরণ / পণ্যের নাম (ঐচ্ছিক)</string>
     <string name="mess_ledger_empty">এখনো কোনো মেম্বারের হিসাব নেই। সদস্য যোগ করে হিসাব শুরু করুন।</string>
 </resources>

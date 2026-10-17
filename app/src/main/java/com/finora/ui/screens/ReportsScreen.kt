@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
 import androidx.compose.material.icons.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.Download
@@ -19,11 +20,15 @@ import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -119,11 +124,44 @@ fun ReportsScreen(
 
     val monthNotes = notes.filter { it.date in bounds }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 18.dp, top = 22.dp, end = 18.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(15.dp)
-    ) {
+    var showEntryEditor by rememberSaveable { mutableStateOf(false) }
+    var entrySection by rememberSaveable { mutableStateOf("Personal") }
+    var showMessDeposit by rememberSaveable { mutableStateOf(false) }
+    var showNoteEditor by rememberSaveable { mutableStateOf(false) }
+
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    when (activeSection) {
+                        ReportSection.BACHELOR -> showMessDeposit = true
+                        ReportSection.NOTEBOOK -> showNoteEditor = true
+                        ReportSection.BUSINESS -> {
+                            entrySection = "Business"
+                            showEntryEditor = true
+                        }
+                        ReportSection.PERSONAL -> {
+                            entrySection = "Personal"
+                            showEntryEditor = true
+                        }
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.testTag("reports_fab_add_entry")
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.add_entry))
+            }
+        },
+        containerColor = Color.Transparent
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 18.dp, top = 22.dp, end = 18.dp, bottom = 88.dp),
+            verticalArrangement = Arrangement.spacedBy(15.dp)
+        ) {
         item {
             Row(
                 Modifier.fillMaxWidth(),
@@ -394,6 +432,42 @@ fun ReportsScreen(
                 }
             }
         }
+    }
+    }
+
+    if (showEntryEditor) {
+        val bookId = books.firstOrNull()?.id ?: 0
+        EntryEditorSheet(
+            viewModel = viewModel,
+            bookId = bookId,
+            members = members.filter { it.isActive },
+            initialEntry = null,
+            defaultSection = entrySection,
+            onDismiss = { showEntryEditor = false }
+        )
+    }
+
+    if (showMessDeposit) {
+        MessEntrySheet(
+            viewModel = viewModel,
+            kind = MessForm.DEPOSIT,
+            members = members.filter { it.isActive },
+            editedMember = null,
+            initialMemberId = null,
+            onDismiss = { showMessDeposit = false }
+        )
+    }
+
+    if (showNoteEditor) {
+        NoteEditorDialog(
+            note = null,
+            onDismiss = { showNoteEditor = false },
+            onSave = { updated ->
+                viewModel.saveNote(updated)
+                showNoteEditor = false
+            },
+            onDelete = { showNoteEditor = false }
+        )
     }
 
     if (exportError) {

@@ -204,5 +204,8 @@
     <string name="all_members_calculation">Members\' deposit, bazar &amp; dues</string>
     <string name="quick_deposit">+ Deposit</string>
     <string name="quick_bazar">+ Bazar</string>
+    <string name="deposit_amount">Deposit amount</string>
+    <string name="bazar_expense_amount">Bazar expense amount</string>
+    <string name="bazar_note_hint">Item details (optional)</string>
     <string name="mess_ledger_empty">No member records yet. Add a member to calculate dues.</string>
 </resources>
